@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: echo-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=echo_user
+      - POSTGRES_PASSWORD=echo_pass
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - echo-network
+
+  mongodb:
+    image: mongo:6.0
+    container_name: echo-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - echo-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: echo-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    networks:
+      - echo-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: echo-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - echo-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: echo-kafka
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - echo-network
+
+  zipkin:
+    image: openzipkin/zipkin:2.24
+    container_name: echo-zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - echo-network
+
+volumes:
+  pgdata:
+  mongodata:
+  redisdata:
+
+networks:
+  echo-network:
+    name: echo-network
+    driver: bridge

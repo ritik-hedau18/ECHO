@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: echo-config
+  namespace: default
+data:
+  EUREKA_HOST: "discovery-server"
+  POSTGRES_HOST: "postgres"
+  MONGO_HOST: "mongodb"
+  REDIS_HOST: "redis"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  ZIPKIN_HOST: "zipkin"
+  LOGSTASH_HOST: "logstash"

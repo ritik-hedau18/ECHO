@@ -1,0 +1,46 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: message-store-service
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_HOST:localhost}:27017/echo_message_db
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      group-id: message-store-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.echo.chatservice.dto,com.echo.messagestoreservice.dto"
+        spring.json.value.default.type: com.echo.messagestoreservice.dto.MessageEvent
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST:localhost}:8761/eureka/
+
+app:
+  encryption:
+    # Must be exactly 32 characters/bytes for AES-256
+    key: ${ECHO_AES_KEY:abcdefghijklmnopqrstuvwxyz123456}
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://${ZIPKIN_HOST:localhost}:9411/api/v2/spans
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
